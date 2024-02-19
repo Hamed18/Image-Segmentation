@@ -85,7 +85,7 @@ for idx=1 : length(idxOfSkittles)
        set(h,'EdgeColor',[.75 0 0]);
        hold on;
 end
-if idx > 1
+if idx > 0  % Check if there any identical object exist or not
 title(['There are ', num2str(numObjects), ' objects in the image!']);
 end
 hold off;
