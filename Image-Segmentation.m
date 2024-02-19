@@ -1,0 +1,91 @@
+A = imread('Main-Image.jpg');
+imshow(A);  %display the image
+B = imresize(A,[600 600]);  % resize the image 600 x 600
+figure;
+imshow(B);
+imwrite(B,'resize.jpg');
+A=imread('resize.jpg');   % read the image
+imshow(A)
+figure;
+
+% Enhancement of the contrast
+imhist(A(:,:,1))  
+r=A(:,:,1);
+g=A(:,:,2);
+b=A(:,:,3);
+figure;
+plot3(r(:),g(:),b(:),'.');
+grid('on')
+B=imadjust(A,stretchlim(A));
+figure;
+imshow(B)
+imwrite(B,'Resize.jpg');
+C=decorrstretch(B,'Tol',0.01);
+imwrite(C,'Final_Resize.jpg');
+figure;
+imshow(C)
+
+% Image Segmentation & Object Identification
+A=imread('resize.jpg');
+imshow(A);
+Agray=rgb2gray(A);
+imshow(Agray);  % make image gray
+level=0.77;
+Athresh=im2bw(Agray,level);
+imshowpair(A,Athresh,'montage');   
+A=imread('resize.jpg');
+imshow(A);
+rmat=A(:,:,1);
+gmat=A(:,:,2);
+bmat=A(:,:,3);
+figure;
+subplot(2,2,1),imshow(rmat);
+title('Red Plane');
+subplot(2,2,2),imshow(gmat);
+title('Green Plane');
+subplot(2,2,3),imshow(bmat);
+title('Blue Plane');
+subplot(2,2,4),imshow(A);
+title('Original Image'); 
+levelr=0.63;
+levelg=0.5;
+levelb=0.4;
+i1=im2bw(rmat,levelr);
+i2=im2bw(gmat,levelg);
+i3=im2bw(bmat,levelb);
+Asum=(i1&i2&i3);
+
+subplot(2,2,1),imshow(i1);
+title('Red Plane');
+subplot(2,2,2),imshow(i2);
+title('Green Plane');
+subplot(2,2,3),imshow(i3);
+title('Blue Plane');
+subplot(2,2,4),imshow(Asum);
+title('Sum of all the planes');
+Acomp=imcomplement(Asum);
+Afilled=imfill(Acomp,'holes');
+figure,imshow(Afilled);
+se=strel('disk',25);     
+Aopenned=imopen(Afilled,se);
+imshow(Aopenned);    
+
+Aregion=regionprops(Aopenned,'centroid');
+[labeled,numObjects]=bwlabel(Aopenned,4);
+stats=regionprops(labeled,'Eccentricity','Area','BoundingBox','centroid');
+areas=[stats.Area];
+eccentricities=[stats.Eccentricity];
+
+idxOfSkittles=find(eccentricities);
+statsDefects=stats(idxOfSkittles);
+figure,imshow(A);
+hold on;   
+for idx=1 : length(idxOfSkittles)
+       h=rectangle('Position',statsDefects(idx).BoundingBox);
+       set(h,'EdgeColor',[.75 0 0]);
+       hold on;
+end
+if idx > 1
+title(['There are ', num2str(numObjects), ' objects in the image!']);
+end
+hold off;
